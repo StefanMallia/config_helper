@@ -1,11 +1,11 @@
-pub struct ConfigHelper
+pub struct ConfigLoader
 {
     settings: config::Config,
 }
 
-impl ConfigHelper
+impl ConfigLoader
 {
-    pub fn new(file_name: &str) -> ConfigHelper
+    pub fn new(file_name: &str) -> ConfigLoader
     {
       let mut settings: config::Config = config::Config::new();
       let mut file_path = std::env::current_dir().unwrap();
@@ -34,7 +34,7 @@ impl ConfigHelper
             println!("{} {}", _err, file_path.to_str().unwrap());
         }  
       }
-      ConfigHelper{settings: settings}
+      ConfigLoader{settings: settings}
     }
 
     pub fn get_array(&self, key: &str) -> Result<Vec<String>, config::ConfigError>
@@ -70,8 +70,8 @@ mod tests
         buffer.write_all("key1 = [\"testvalue1\", \"testvalue2\", \"testvalue3\", \"testvalue4\", \"testvalue5\", \"testvalue6\", \"testvalue7\", \"testvalue8\", \"testvalue9\"]".as_bytes()).unwrap();
         
         //use function
-        let config_helper: ConfigHelper = ConfigHelper::new(&[&dir_name, "/config.toml"].join(""));
-        let values_vec: Vec<String> = config_helper.get_array("key1").unwrap();
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let values_vec: Vec<String> = config_loader.get_array("key1").unwrap();
 
         //asserts
         assert_eq!(vec!["testvalue1", "testvalue2", "testvalue3", "testvalue4", "testvalue5", "testvalue6", "testvalue7", "testvalue8", "testvalue9"], values_vec);
@@ -91,8 +91,8 @@ mod tests
         buffer.write_all("key1 = [ ]".as_bytes()).unwrap();
         
         //use function
-        let config_helper: ConfigHelper = ConfigHelper::new(&[&dir_name, "/config.toml"].join(""));
-        let values_vec: Vec<String> = config_helper.get_array("key1").unwrap();
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let values_vec: Vec<String> = config_loader.get_array("key1").unwrap();
 
         //asserts
         assert_eq!(std::vec::Vec::<String>::new(), values_vec);
@@ -111,8 +111,8 @@ mod tests
         buffer.write_all("key1 = \"testvalue\"".as_bytes()).unwrap();
         
         //use function
-        let config_helper: ConfigHelper = ConfigHelper::new(&[&dir_name, "/config.toml"].join(""));
-        let value: String = config_helper.get_value("key1").unwrap();
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let value: String = config_loader.get_value("key1").unwrap();
 
 
         //asserts
