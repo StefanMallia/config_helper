@@ -121,4 +121,26 @@ mod tests
         //cleanup
         remove_dir_all(dir_name).unwrap();
     }
+
+    #[test]
+    fn test_hierarchical_value_settings() 
+    {
+        //setup
+        let dir_name = "test_assets_4";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer.write_all("key1 = \"testvalue1\"\n\n[test_assets]\nkey2 = \"testvalue2\"".as_bytes()).unwrap();
+        
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let value: String = config_loader.get_value("test_assets.key2").unwrap();
+
+
+        //asserts
+        assert_eq!("testvalue2", value);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
 }
