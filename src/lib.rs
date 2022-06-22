@@ -37,7 +37,7 @@ impl ConfigLoader
       ConfigLoader{settings: settings}
     }
 
-    pub fn get_array(&self, key: &str) -> Result<Vec<String>, config::ConfigError>
+    pub fn get_vec(&self, key: &str) -> Result<Vec<String>, config::ConfigError>
     {
       match self.settings.get_array(key)
       {
@@ -46,10 +46,15 @@ impl ConfigLoader
       }            
     }
 
-    pub fn get_value(&self, key: &str) -> Result<String, config::ConfigError>
+    pub fn get_string(&self, key: &str) -> Result<String, config::ConfigError>
     {
       self.settings.get_str(key)
     }
+
+    /*pub fn get_child_config(&self, key: &str) -> Result<String, config::ConfigError>
+    {
+      //self.settings.merge
+    }*/
 }
 
 
@@ -71,7 +76,7 @@ mod tests
         
         //use function
         let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
-        let values_vec: Vec<String> = config_loader.get_array("key1").unwrap();
+        let values_vec: Vec<String> = config_loader.get_vec("key1").unwrap();
 
         //asserts
         assert_eq!(vec!["testvalue1", "testvalue2", "testvalue3", "testvalue4", "testvalue5", "testvalue6", "testvalue7", "testvalue8", "testvalue9"], values_vec);
@@ -92,7 +97,7 @@ mod tests
         
         //use function
         let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
-        let values_vec: Vec<String> = config_loader.get_array("key1").unwrap();
+        let values_vec: Vec<String> = config_loader.get_vec("key1").unwrap();
 
         //asserts
         assert_eq!(std::vec::Vec::<String>::new(), values_vec);
@@ -112,7 +117,7 @@ mod tests
         
         //use function
         let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
-        let value: String = config_loader.get_value("key1").unwrap();
+        let value: String = config_loader.get_string("key1").unwrap();
 
 
         //asserts
@@ -133,11 +138,32 @@ mod tests
         
         //use function
         let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
-        let value: String = config_loader.get_value("test_assets.key2").unwrap();
+        let value: String = config_loader.get_string("test_assets.key2").unwrap();
 
 
         //asserts
         assert_eq!("testvalue2", value);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+    #[test]
+    fn test_2_level_hierarchical_value_settings() 
+    {
+        //setup
+        let dir_name = "test_assets_5";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer.write_all("key = \"testvalue1\"\n\n[test_assets]\nkey = \"testvalue2\"\n\n[test_assets.level2]\nkey = \"testvalue3\"".as_bytes()).unwrap();
+ 
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let value: String = config_loader.get_string("test_assets.level2.key").unwrap();
+
+
+        //asserts
+        assert_eq!("testvalue3", value);
 
         //cleanup
         remove_dir_all(dir_name).unwrap();
