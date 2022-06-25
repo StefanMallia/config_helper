@@ -169,4 +169,68 @@ mod tests
         remove_dir_all(dir_name).unwrap();
     }
 
+    #[test]
+    fn test_fail_get_hierarchical_key_should_be_at_top_of_document()
+    {
+        //setup
+        let dir_name = "test_assets_6";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer.write_all("key = \"testvalue1\"\n\n[test_assets]\nkey = \"testvalue2\"\n\ntest_assets.level2.key = \"testvalue3\"".as_bytes()).unwrap();
+ 
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let value: Result<String, config::ConfigError> = config_loader.get_string("test_assets.level2.key");
+
+        //asserts
+        match value
+        {
+            Ok(x) => assert!(false, "Get value should not work because the 'test_assets.level2.key' key should be at the top of the document. At its current position, test_assets.test_assets.level2.key should be called."),
+            (x) => assert!(true, "")
+        }
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+    #[test]
+    fn test_successful_get_hierarchical_key_should_include_all_hierchy_level_keys()
+    {
+        //setup
+        let dir_name = "test_assets_7";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer.write_all("key = \"testvalue1\"\n\n[test_assets]\nkey = \"testvalue2\"\n\ntest_assets.level2.key = \"testvalue3\"".as_bytes()).unwrap();
+ 
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let value: String = config_loader.get_string("test_assets.test_assets.level2.key").unwrap();
+
+        //asserts
+        assert_eq!("testvalue3", value);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+
+    #[test]
+    fn test_successful_get_hierarchical_key_should_be_at_top_of_document()
+    {
+        //setup
+        let dir_name = "test_assets_8";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer.write_all("test.level2.key = \"testvalue3\"\n\nkey = \"testvalue1\"\n\n[test_assets]\nkey = \"testvalue2\"".as_bytes()).unwrap();
+ 
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let value: String = config_loader.get_string("test.level2.key").unwrap();
+
+        //asserts
+        assert_eq!("testvalue3", value);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
 }
