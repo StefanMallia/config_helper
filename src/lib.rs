@@ -1,6 +1,7 @@
 pub struct ConfigLoader
 {
-    settings: config::Config,
+    current_level: String,
+    settings: config::Config
 }
 
 impl ConfigLoader
@@ -34,12 +35,12 @@ impl ConfigLoader
             println!("{} {}", _err, file_path.to_str().unwrap());
         }  
       }
-      ConfigLoader{settings: settings}
+      ConfigLoader{current_level: "".to_string(), settings: settings}
     }
 
     pub fn get_vec(&self, key: &str) -> Result<Vec<String>, config::ConfigError>
     {
-      match self.settings.get_array(key)
+      match self.settings.get_array(&format!("{}{}", self.current_level, key))
       {
         Ok(array) => Ok(array.iter().map(|x| x.clone().into_str().unwrap()).collect()),
         Err(e) => Err(e)
@@ -48,13 +49,16 @@ impl ConfigLoader
 
     pub fn get_string(&self, key: &str) -> Result<String, config::ConfigError>
     {
-      self.settings.get_str(key)
+      self.settings.get_str(&format!("{}{}", self.current_level, key))
     }
 
-    /*pub fn get_child_config(&self, key: &str) -> Result<String, config::ConfigError>
+    pub fn get_sub_config(self, level_key: &str) -> ConfigLoader
     {
-      //self.settings.merge
-    }*/
+        let sub_level = self.current_level + level_key + ".";
+        let table = self.settings.get_table(&sub_level);
+        let sub_config = ConfigLoader{current_level: sub_level.to_string(), settings: self.settings.clone()};
+        sub_config
+    }
 }
 
 
@@ -186,7 +190,7 @@ mod tests
         match value
         {
             Ok(x) => assert!(false, "Get value should not work because the 'test_assets.level2.key' key should be at the top of the document. At its current position, test_assets.test_assets.level2.key should be called."),
-            (x) => assert!(true, "")
+            Err(x) => assert!(true, "")
         }
 
         //cleanup
@@ -226,6 +230,27 @@ mod tests
         //use function
         let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
         let value: String = config_loader.get_string("test.level2.key").unwrap();
+
+        //asserts
+        assert_eq!("testvalue3", value);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+    #[test]
+    fn test_get_child_config()
+    {
+        //setup
+        let dir_name = "test_assets_9";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer.write_all("key = \"testvalue1\"\n\n[test_assets]\nkey = \"testvalue2\"\n\n[test_assets.level2]\nkey = \"testvalue3\"".as_bytes()).unwrap();
+ 
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let sub_config: ConfigLoader = config_loader.get_sub_config("test_assets");
+        let value: String = sub_config.get_string("level2.key").unwrap();
 
         //asserts
         assert_eq!("testvalue3", value);
