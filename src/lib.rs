@@ -66,9 +66,9 @@ impl ConfigLoader
             .get_str(&format!("{}{}", self.current_level, key))
     }
 
-    pub fn get_sub_config(self, level_key: &str) -> ConfigLoader
+    pub fn get_sub_config(&self, level_key: &str) -> ConfigLoader
     {
-        let sub_level = self.current_level + level_key + ".";
+        let sub_level = [&self.current_level, level_key, "."].join("");
         let sub_config = ConfigLoader
         {
             current_level: sub_level.to_string(),
