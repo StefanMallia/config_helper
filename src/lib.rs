@@ -66,6 +66,19 @@ impl ConfigLoader
             .get_str(&format!("{}{}", self.current_level, key))
     }
 
+    pub fn get_int(&self, key: &str) -> Result<i64, config::ConfigError>
+    {
+        self.settings
+            .get_int(&format!("{}{}", self.current_level, key))
+    }
+
+    pub fn get_float(&self, key: &str) -> Result<f64, config::ConfigError>
+    {
+        self.settings
+            .get_float(&format!("{}{}", self.current_level, key))
+    }
+
+
     pub fn get_sub_config(&self, level_key: &str) -> ConfigLoader
     {
         let sub_level = [&self.current_level, level_key, "."].join("");
@@ -139,7 +152,7 @@ mod tests
     }
 
     #[test]
-    fn test_value_settings()
+    fn test_string_settings()
     {
         //setup
         let dir_name = "test_assets_3";
@@ -153,6 +166,68 @@ mod tests
 
         //asserts
         assert_eq!("testvalue", value);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+
+    #[test]
+    fn test_int_settings()
+    {
+        //setup
+        let dir_name = "test_assets_test_int";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer.write_all("key1 = 1423114327654".as_bytes()).unwrap();
+
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let value: i64 = config_loader.get_int("key1").unwrap();
+
+        //asserts
+        assert_eq!(1423114327654, value);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+    #[test]
+    fn test_float_settings()
+    {
+        //setup
+        let dir_name = "test_assets_test_float";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer.write_all("key1 = 34214123.3214321978".as_bytes()).unwrap();
+
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let value: f64 = config_loader.get_float("key1").unwrap();
+
+        //asserts
+        assert_eq!(34214123.3214321978, value);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+
+    #[test]
+    fn test_int_to_float_settings()
+    {
+        //setup
+        let dir_name = "test_assets_test_int_to_float";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer.write_all("key1 = 34214123".as_bytes()).unwrap();
+
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let value: f64 = config_loader.get_float("key1").unwrap();
+
+        //asserts
+        assert_eq!(34214123.0, value);
 
         //cleanup
         remove_dir_all(dir_name).unwrap();
