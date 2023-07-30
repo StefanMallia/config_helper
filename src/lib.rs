@@ -1,3 +1,6 @@
+use serde::Deserialize;
+
+
 pub struct ConfigLoader
 {
     current_level: String,
@@ -88,6 +91,11 @@ impl ConfigLoader
             settings: self.settings.clone()
         };
         sub_config
+    }
+
+    pub fn try_into<'de, T: Deserialize<'de>>(self) -> Result<T, config::ConfigError>
+    {        
+        T::deserialize(self.settings)
     }
 }
 
@@ -358,6 +366,39 @@ mod tests
 
         //asserts
         assert_eq!("testvalue3", value);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct AppConfig
+    {
+        pub name: String,
+        pub server_address: String,
+        pub port: u16,
+        pub max_connections: Option<usize>,
+    }
+    
+    #[test]
+    fn test_deserialize()
+    {
+        //setup
+        let dir_name = "test_assets_10";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer.write_all("name = \"testvalue1\"\nserver_address = \"12.34.56.78:9000\"\nport=1234".as_bytes()).unwrap();
+
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let app_config: AppConfig = config_loader.try_into().unwrap();
+        
+
+        //asserts
+        assert_eq!("testvalue1", app_config.name);
+        assert_eq!("12.34.56.78:9000", app_config.server_address);
+        assert_eq!(1234, app_config.port);
+        assert_eq!(None, app_config.max_connections);
 
         //cleanup
         remove_dir_all(dir_name).unwrap();
