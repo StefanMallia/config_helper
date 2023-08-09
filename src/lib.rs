@@ -1,56 +1,45 @@
 use serde::Deserialize;
 
-
-pub struct ConfigLoader
-{
+pub struct ConfigLoader {
     current_level: String,
-    settings: config::Config
+    settings: config::Config,
 }
 
-impl ConfigLoader
-{
-    pub fn new(file_name: &str) -> ConfigLoader
-    {
+impl ConfigLoader {
+    pub fn new(file_name: &str) -> ConfigLoader {
         let mut settings: config::Config = config::Config::new();
         let mut file_path = std::env::current_dir().unwrap();
 
-        loop
-        {
+        loop {
             let appconfig_path = file_path.join(file_name);
-            if appconfig_path.exists()
-            {
+            if appconfig_path.exists() {
                 break;
             }
-            file_path = match file_path.parent()
-            {
+            file_path = match file_path.parent() {
                 Some(path) => path.to_path_buf(),
-                None => panic!("{} not found in any parent directory.", file_name)
+                None => panic!("{} not found in any parent directory.", file_name),
             }
         }
         match settings.merge(config::File::with_name(
-            file_path.join(file_name).to_str().unwrap()))
-        {
-            Ok(_result) =>
-            {
+            file_path.join(file_name).to_str().unwrap(),
+        )) {
+            Ok(_result) => {
                 println!(
                     "Config loaded: {}",
                     file_path.join(file_name).to_str().unwrap()
                 );
             }
-            Err(_err) =>
-            {
+            Err(_err) => {
                 println!("{} {}", _err, file_path.to_str().unwrap());
             }
         }
-        ConfigLoader
-        {
+        ConfigLoader {
             current_level: "".to_string(),
-            settings: settings
+            settings: settings,
         }
     }
 
-    pub fn get_vec(&self, key: &str) -> Result<Vec<String>, config::ConfigError>
-    {
+    pub fn get_vec(&self, key: &str) -> Result<Vec<String>, config::ConfigError> {
         match self
             .settings
             .get_array(&format!("{}{}", self.current_level, key))
@@ -59,56 +48,47 @@ impl ConfigLoader
                 .iter()
                 .map(|x| x.clone().into_str().unwrap())
                 .collect()),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 
-    pub fn get_string(&self, key: &str) -> Result<String, config::ConfigError>
-    {
+    pub fn get_string(&self, key: &str) -> Result<String, config::ConfigError> {
         self.settings
             .get_str(&format!("{}{}", self.current_level, key))
     }
 
-    pub fn get_int(&self, key: &str) -> Result<i64, config::ConfigError>
-    {
+    pub fn get_int(&self, key: &str) -> Result<i64, config::ConfigError> {
         self.settings
             .get_int(&format!("{}{}", self.current_level, key))
     }
 
-    pub fn get_float(&self, key: &str) -> Result<f64, config::ConfigError>
-    {
+    pub fn get_float(&self, key: &str) -> Result<f64, config::ConfigError> {
         self.settings
             .get_float(&format!("{}{}", self.current_level, key))
     }
 
-
-    pub fn get_sub_config(&self, level_key: &str) -> ConfigLoader
-    {
+    pub fn get_sub_config(&self, level_key: &str) -> ConfigLoader {
         let sub_level = [&self.current_level, level_key, "."].join("");
-        let sub_config = ConfigLoader
-        {
+        let sub_config = ConfigLoader {
             current_level: sub_level.to_string(),
-            settings: self.settings.clone()
+            settings: self.settings.clone(),
         };
         sub_config
     }
 
-    pub fn try_into<'de, T: Deserialize<'de>>(self) -> Result<T, config::ConfigError>
-    {        
+    pub fn try_into<'de, T: Deserialize<'de>>(self) -> Result<T, config::ConfigError> {
         T::deserialize(self.settings)
     }
 }
 
 #[cfg(test)]
-mod tests
-{
+mod tests {
     use super::*;
     use std::fs::{create_dir_all, remove_dir_all, File};
     use std::io::prelude::*;
 
     #[test]
-    fn test_array_settings()
-    {
+    fn test_array_settings() {
         //setup
         let dir_name = "test_assets_1";
         create_dir_all(dir_name).unwrap();
@@ -140,8 +120,7 @@ mod tests
     }
 
     #[test]
-    fn test_empty_array_settings()
-    {
+    fn test_empty_array_settings() {
         //setup
         let dir_name = "test_assets_2";
         create_dir_all(dir_name).unwrap();
@@ -160,8 +139,7 @@ mod tests
     }
 
     #[test]
-    fn test_string_settings()
-    {
+    fn test_string_settings() {
         //setup
         let dir_name = "test_assets_3";
         create_dir_all(dir_name).unwrap();
@@ -179,10 +157,8 @@ mod tests
         remove_dir_all(dir_name).unwrap();
     }
 
-
     #[test]
-    fn test_int_settings()
-    {
+    fn test_int_settings() {
         //setup
         let dir_name = "test_assets_test_int";
         create_dir_all(dir_name).unwrap();
@@ -201,13 +177,14 @@ mod tests
     }
 
     #[test]
-    fn test_float_settings()
-    {
+    fn test_float_settings() {
         //setup
         let dir_name = "test_assets_test_float";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
-        buffer.write_all("key1 = 34214123.3214321978".as_bytes()).unwrap();
+        buffer
+            .write_all("key1 = 34214123.3214321978".as_bytes())
+            .unwrap();
 
         //use function
         let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
@@ -220,10 +197,8 @@ mod tests
         remove_dir_all(dir_name).unwrap();
     }
 
-
     #[test]
-    fn test_int_to_float_settings()
-    {
+    fn test_int_to_float_settings() {
         //setup
         let dir_name = "test_assets_test_int_to_float";
         create_dir_all(dir_name).unwrap();
@@ -242,8 +217,7 @@ mod tests
     }
 
     #[test]
-    fn test_hierarchical_value_settings()
-    {
+    fn test_hierarchical_value_settings() {
         //setup
         let dir_name = "test_assets_4";
         create_dir_all(dir_name).unwrap();
@@ -264,8 +238,7 @@ mod tests
     }
 
     #[test]
-    fn test_2_level_hierarchical_value_settings()
-    {
+    fn test_2_level_hierarchical_value_settings() {
         //setup
         let dir_name = "test_assets_5";
         create_dir_all(dir_name).unwrap();
@@ -284,8 +257,7 @@ mod tests
     }
 
     #[test]
-    fn test_fail_get_hierarchical_key_should_be_at_top_of_document()
-    {
+    fn test_fail_get_hierarchical_key_should_be_at_top_of_document() {
         //setup
         let dir_name = "test_assets_6";
         create_dir_all(dir_name).unwrap();
@@ -309,8 +281,7 @@ mod tests
     }
 
     #[test]
-    fn test_successful_get_hierarchical_key_should_include_all_hierchy_level_keys()
-    {
+    fn test_successful_get_hierarchical_key_should_include_all_hierchy_level_keys() {
         //setup
         let dir_name = "test_assets_7";
         create_dir_all(dir_name).unwrap();
@@ -331,8 +302,7 @@ mod tests
     }
 
     #[test]
-    fn test_successful_get_hierarchical_key_should_be_at_top_of_document()
-    {
+    fn test_successful_get_hierarchical_key_should_be_at_top_of_document() {
         //setup
         let dir_name = "test_assets_8";
         create_dir_all(dir_name).unwrap();
@@ -351,8 +321,7 @@ mod tests
     }
 
     #[test]
-    fn test_get_child_config()
-    {
+    fn test_get_child_config() {
         //setup
         let dir_name = "test_assets_9";
         create_dir_all(dir_name).unwrap();
@@ -372,27 +341,29 @@ mod tests
     }
 
     #[derive(Debug, Deserialize)]
-    struct AppConfig
-    {
+    struct AppConfig {
         pub name: String,
         pub server_address: String,
         pub port: u16,
         pub max_connections: Option<usize>,
     }
-    
+
     #[test]
-    fn test_deserialize()
-    {
+    fn test_deserialize() {
         //setup
         let dir_name = "test_assets_10";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
-        buffer.write_all("name = \"testvalue1\"\nserver_address = \"12.34.56.78:9000\"\nport=1234".as_bytes()).unwrap();
+        buffer
+            .write_all(
+                "name = \"testvalue1\"\nserver_address = \"12.34.56.78:9000\"\nport=1234"
+                    .as_bytes(),
+            )
+            .unwrap();
 
         //use function
         let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
         let app_config: AppConfig = config_loader.try_into().unwrap();
-        
 
         //asserts
         assert_eq!("testvalue1", app_config.name);
