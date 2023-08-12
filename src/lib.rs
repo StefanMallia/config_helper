@@ -1,7 +1,6 @@
 use serde::Deserialize;
 
 pub struct ConfigLoader {
-    current_level: String,
     settings: config::Config,
 }
 
@@ -33,17 +32,11 @@ impl ConfigLoader {
                 println!("{} {}", _err, file_path.to_str().unwrap());
             }
         }
-        ConfigLoader {
-            current_level: "".to_string(),
-            settings: settings,
-        }
+        ConfigLoader { settings: settings }
     }
 
     pub fn get_vec(&self, key: &str) -> Result<Vec<String>, config::ConfigError> {
-        match self
-            .settings
-            .get_array(&format!("{}{}", self.current_level, key))
-        {
+        match self.settings.get_array(&key) {
             Ok(array) => Ok(array
                 .iter()
                 .map(|x| x.clone().into_str().unwrap())
@@ -53,27 +46,24 @@ impl ConfigLoader {
     }
 
     pub fn get_string(&self, key: &str) -> Result<String, config::ConfigError> {
-        self.settings
-            .get_str(&format!("{}{}", self.current_level, key))
+        self.settings.get_str(&key)
     }
 
     pub fn get_int(&self, key: &str) -> Result<i64, config::ConfigError> {
-        self.settings
-            .get_int(&format!("{}{}", self.current_level, key))
+        self.settings.get_int(&key)
     }
 
     pub fn get_float(&self, key: &str) -> Result<f64, config::ConfigError> {
-        self.settings
-            .get_float(&format!("{}{}", self.current_level, key))
+        self.settings.get_float(&key)
     }
 
     pub fn get_sub_config(&self, level_key: &str) -> ConfigLoader {
-        let sub_level = [&self.current_level, level_key, "."].join("");
-        let sub_config = ConfigLoader {
-            current_level: sub_level.to_string(),
-            settings: self.settings.clone(),
-        };
-        sub_config
+        let hash_map = self.settings.get_table(level_key).unwrap().to_owned();
+        let mut config = config::Config::new();
+        for (key, value) in hash_map {
+            config.set(&key, value).unwrap();
+        }
+        ConfigLoader { settings: config }
     }
 
     pub fn try_into<'de, T: Deserialize<'de>>(self) -> Result<T, config::ConfigError> {
@@ -364,6 +354,36 @@ mod tests {
         //use function
         let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
         let app_config: AppConfig = config_loader.try_into().unwrap();
+
+        //asserts
+        assert_eq!("testvalue1", app_config.name);
+        assert_eq!("12.34.56.78:9000", app_config.server_address);
+        assert_eq!(1234, app_config.port);
+        assert_eq!(None, app_config.max_connections);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+    #[test]
+    fn test_deserialize_only_one_sub_config() {
+        //setup
+        let dir_name = "test_assets_11";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer
+            .write_all(
+                "[sub_config1]\nname = \"testvalue1\"\nserver_address = \"12.34.56.78:9000\"\nport=1234\n[sub_config2]\nsub_config_test_value=1234"
+                    .as_bytes(),
+            )
+            .unwrap();
+
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let app_config: AppConfig = config_loader
+            .get_sub_config("sub_config1")
+            .try_into()
+            .unwrap();
 
         //asserts
         assert_eq!("testvalue1", app_config.name);
