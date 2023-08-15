@@ -66,8 +66,8 @@ impl ConfigLoader {
         ConfigLoader { settings: config }
     }
 
-    pub fn try_into<'de, T: Deserialize<'de>>(self) -> Result<T, config::ConfigError> {
-        T::deserialize(self.settings)
+    pub fn deserialize<'de, T: Deserialize<'de>>(&self) -> Result<T, config::ConfigError> {
+        T::deserialize(self.settings.clone())
     }
 }
 
@@ -353,7 +353,7 @@ mod tests {
 
         //use function
         let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
-        let app_config: AppConfig = config_loader.try_into().unwrap();
+        let app_config: AppConfig = config_loader.deserialize().unwrap();
 
         //asserts
         assert_eq!("testvalue1", app_config.name);
@@ -380,10 +380,38 @@ mod tests {
 
         //use function
         let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
-        let app_config: AppConfig = config_loader
-            .get_sub_config("sub_config1")
-            .try_into()
+        let app_config: AppConfig = (config_loader.get_sub_config("sub_config1"))
+            .deserialize()
             .unwrap();
+
+        //asserts
+        assert_eq!("testvalue1", app_config.name);
+        assert_eq!("12.34.56.78:9000", app_config.server_address);
+        assert_eq!(1234, app_config.port);
+        assert_eq!(None, app_config.max_connections);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+    #[test]
+    fn test_deserialize_reference() {
+        //setup
+        let dir_name = "test_assets_12";
+        create_dir_all(dir_name).unwrap();
+        let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        buffer
+            .write_all(
+                "[sub_config1]\nname = \"testvalue1\"\nserver_address = \"12.34.56.78:9000\"\nport=1234\n[sub_config2]\nsub_config_test_value=1234"
+                    .as_bytes(),
+            )
+            .unwrap();
+
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let sub_config = &config_loader.get_sub_config("sub_config1");
+
+        let app_config: AppConfig = sub_config.deserialize().unwrap();
 
         //asserts
         assert_eq!("testvalue1", app_config.name);
