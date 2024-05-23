@@ -1,12 +1,12 @@
 use serde::Deserialize;
 
 pub struct ConfigLoader {
-    settings: config::Config,
+    config: config::Config,
 }
 
 impl ConfigLoader {
     pub fn new(file_name: &str) -> ConfigLoader {
-        let mut settings: config::Config = config::Config::new();
+        let mut config: config::Config = config::Config::new();
         let mut file_path = std::env::current_dir().unwrap();
 
         loop {
@@ -19,7 +19,7 @@ impl ConfigLoader {
                 None => panic!("{} not found in any parent directory.", file_name),
             }
         }
-        match settings.merge(config::File::with_name(
+        match config.merge(config::File::with_name(
             file_path.join(file_name).to_str().unwrap(),
         )) {
             Ok(_result) => {
@@ -32,17 +32,17 @@ impl ConfigLoader {
                 println!("{} {}", _err, file_path.to_str().unwrap());
             }
         }
-        match settings.merge(config::Environment::new()) {
+        match config.merge(config::Environment::new()) {
             Ok(_result) => {}
             Err(_err) => {
                 println!("{}", _err);
             }
         }
-        ConfigLoader { settings: settings }
+        ConfigLoader { config }
     }
 
     pub fn get_vec(&self, key: &str) -> Result<Vec<String>, config::ConfigError> {
-        match self.settings.get_array(&key) {
+        match self.config.get_array(&key) {
             Ok(array) => Ok(array
                 .iter()
                 .map(|x| x.clone().into_str().unwrap())
@@ -52,28 +52,28 @@ impl ConfigLoader {
     }
 
     pub fn get_string(&self, key: &str) -> Result<String, config::ConfigError> {
-        self.settings.get_str(&key)
+        self.config.get_str(&key)
     }
 
     pub fn get_int(&self, key: &str) -> Result<i64, config::ConfigError> {
-        self.settings.get_int(&key)
+        self.config.get_int(&key)
     }
 
     pub fn get_float(&self, key: &str) -> Result<f64, config::ConfigError> {
-        self.settings.get_float(&key)
+        self.config.get_float(&key)
     }
 
     pub fn get_sub_config(&self, level_key: &str) -> ConfigLoader {
-        let hash_map = self.settings.get_table(level_key).unwrap().to_owned();
+        let hash_map = self.config.get_table(level_key).unwrap().to_owned();
         let mut config = config::Config::new();
         for (key, value) in hash_map {
             config.set(&key, value).unwrap();
         }
-        ConfigLoader { settings: config }
+        ConfigLoader { config }
     }
 
     pub fn deserialize<'de, T: Deserialize<'de>>(&self) -> Result<T, config::ConfigError> {
-        T::deserialize(self.settings.clone())
+        T::deserialize(self.config.clone())
     }
 }
 
