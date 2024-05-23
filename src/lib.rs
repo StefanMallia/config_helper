@@ -32,6 +32,12 @@ impl ConfigLoader {
                 println!("{} {}", _err, file_path.to_str().unwrap());
             }
         }
+        match settings.merge(config::Environment::new()) {
+            Ok(_result) => {}
+            Err(_err) => {
+                println!("{}", _err);
+            }
+        }
         ConfigLoader { settings: settings }
     }
 
@@ -325,6 +331,25 @@ mod tests {
 
         //asserts
         assert_eq!("testvalue3", value);
+
+        //cleanup
+        remove_dir_all(dir_name).unwrap();
+    }
+
+    #[test]
+    fn test_get_environment_variable() {
+        //setup
+        let dir_name = "test_get_environment_variable";
+        create_dir_all(dir_name).unwrap();
+        _ = File::create([dir_name, "/config.toml"].join("")).unwrap();
+        std::env::set_var("key", "value");
+
+        //use function
+        let config_loader: ConfigLoader = ConfigLoader::new(&[&dir_name, "/config.toml"].join(""));
+        let value: String = config_loader.get_string("key").unwrap();
+
+        //asserts
+        assert_eq!("value", value);
 
         //cleanup
         remove_dir_all(dir_name).unwrap();
