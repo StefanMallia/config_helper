@@ -86,7 +86,7 @@ mod tests {
     #[test]
     fn test_array_settings() {
         //setup
-        let dir_name = "test_assets_1";
+        let dir_name = "test_array_settings";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer.write_all("key1 = [\"testvalue1\", \"testvalue2\", \"testvalue3\", \"testvalue4\", \"testvalue5\", \"testvalue6\", \"testvalue7\", \"testvalue8\", \"testvalue9\"]".as_bytes()).unwrap();
@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn test_empty_array_settings() {
         //setup
-        let dir_name = "test_assets_2";
+        let dir_name = "test_empty_array_settings";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer.write_all("key1 = [ ]".as_bytes()).unwrap();
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn test_string_settings() {
         //setup
-        let dir_name = "test_assets_3";
+        let dir_name = "test_string_settings";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer.write_all("key1 = \"testvalue\"".as_bytes()).unwrap();
@@ -156,7 +156,7 @@ mod tests {
     #[test]
     fn test_int_settings() {
         //setup
-        let dir_name = "test_assets_test_int";
+        let dir_name = "test_int_settings";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer.write_all("key1 = 1423114327654".as_bytes()).unwrap();
@@ -175,7 +175,7 @@ mod tests {
     #[test]
     fn test_float_settings() {
         //setup
-        let dir_name = "test_assets_test_float";
+        let dir_name = "test_float_settings";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer
@@ -196,7 +196,7 @@ mod tests {
     #[test]
     fn test_int_to_float_settings() {
         //setup
-        let dir_name = "test_assets_test_int_to_float";
+        let dir_name = "test_int_to_float_settings";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer.write_all("key1 = 34214123".as_bytes()).unwrap();
@@ -215,7 +215,7 @@ mod tests {
     #[test]
     fn test_hierarchical_value_settings() {
         //setup
-        let dir_name = "test_assets_4";
+        let dir_name = "test_hierarchical_value_settings";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer
@@ -236,7 +236,7 @@ mod tests {
     #[test]
     fn test_2_level_hierarchical_value_settings() {
         //setup
-        let dir_name = "test_assets_5";
+        let dir_name = "test_2_level_hierarchical_value_settings";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer.write_all("key = \"testvalue1\"\n\n[test_assets]\nkey = \"testvalue2\"\n\n[test_assets.level2]\nkey = \"testvalue3\"".as_bytes()).unwrap();
@@ -255,7 +255,7 @@ mod tests {
     #[test]
     fn test_fail_get_hierarchical_key_should_be_at_top_of_document() {
         //setup
-        let dir_name = "test_assets_6";
+        let dir_name = "test_fail_get_hierarchical_key_should_be_at_top_of_document";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer.write_all("key = \"testvalue1\"\n\n[test_assets]\nkey = \"testvalue2\"\n\ntest_assets.level2.key = \"testvalue3\"".as_bytes()).unwrap();
@@ -279,7 +279,7 @@ mod tests {
     #[test]
     fn test_successful_get_hierarchical_key_should_include_all_hierchy_level_keys() {
         //setup
-        let dir_name = "test_assets_7";
+        let dir_name = "test_successful_get_hierarchical_key_should_include_all_hierchy_level_keys";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer.write_all("key = \"testvalue1\"\n\n[test_assets]\nkey = \"testvalue2\"\n\ntest_assets.level2.key = \"testvalue3\"".as_bytes()).unwrap();
@@ -300,7 +300,7 @@ mod tests {
     #[test]
     fn test_successful_get_hierarchical_key_should_be_at_top_of_document() {
         //setup
-        let dir_name = "test_assets_8";
+        let dir_name = "test_successful_get_hierarchical_key_should_be_at_top_of_document";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer.write_all("test.level2.key = \"testvalue3\"\n\nkey = \"testvalue1\"\n\n[test_assets]\nkey = \"testvalue2\"".as_bytes()).unwrap();
@@ -319,7 +319,7 @@ mod tests {
     #[test]
     fn test_get_child_config() {
         //setup
-        let dir_name = "test_assets_9";
+        let dir_name = "test_get_child_config";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer.write_all("key = \"testvalue1\"\n\n[test_assets]\nkey = \"testvalue2\"\n\n[test_assets.level2]\nkey = \"testvalue3\"".as_bytes()).unwrap();
@@ -366,7 +366,7 @@ mod tests {
     #[test]
     fn test_deserialize() {
         //setup
-        let dir_name = "test_assets_10";
+        let dir_name = "test_deserialize";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer
@@ -393,7 +393,7 @@ mod tests {
     #[test]
     fn test_deserialize_only_one_sub_config() {
         //setup
-        let dir_name = "test_assets_11";
+        let dir_name = "test_deserialize_only_one_sub_config";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer
@@ -422,7 +422,7 @@ mod tests {
     #[test]
     fn test_deserialize_reference() {
         //setup
-        let dir_name = "test_assets_12";
+        let dir_name = "test_deserialize_reference";
         create_dir_all(dir_name).unwrap();
         let mut buffer = File::create([dir_name, "/config.toml"].join("")).unwrap();
         buffer
